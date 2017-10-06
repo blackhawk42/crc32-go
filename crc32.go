@@ -3,10 +3,13 @@ package main
 import(
 	"fmt"
 	"flag"
+	"path/filepath"
 	"hash/crc32"
 	"io"
 	"os"
 )
+
+// Structs
 
 type Crc32Report struct {
 	Filename string
@@ -26,8 +29,25 @@ func (r *Crc32Report) Report() string {
 	}
 }
 
+// Main function
+
 func main() {
+	// Flag config
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "%s: %[1]s FILE1 [FILE2...]\n", filepath.Base(os.Args[0]))
+		flag.PrintDefaults()
+	}
+	
 	flag.Parse()
+	
+	
+	// Program
+	
+	if len(flag.Args()) == 0 {
+		flag.Usage()
+		os.Exit(2)
+	}
+	
 	ch := make(chan *Crc32Report)
 	
 	for _, filename := range flag.Args() {
@@ -38,6 +58,8 @@ func main() {
 		fmt.Println((<-ch).Report())
 	}
 }
+
+// Other functions
 
 func crc32File(filename string, ch chan *Crc32Report) {
 	report := &Crc32Report{Filename: filename}
